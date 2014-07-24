@@ -23,7 +23,7 @@ class SmtpMailer(object):
         "plain": smtplib.SMTP,
     }
 
-    def __init__(self, user, password, host="", port=0, security="tls"):
+    def __init__(self, user=None, password=None, host="", port=0, security="tls"):
         try:
             self._mailer = self._MAILERS[security]
         except KeyError:
@@ -48,11 +48,14 @@ class SmtpMailer(object):
     def _connect(self):
         mailer = self._mailer(self._host, self._port)
         mailer.ehlo()
-        mailer.login(self._user, self._password)
+
+        if self._user != None and self._password != None:
+            raise Exception('WHY!!!!!!!!!!!!!!!!!!!!!!!!! %s' % self._password)
+            mailer.login(self._user, self._password)
 
         return mailer
 
 
 class GmailMailer(SmtpMailer):
-    def __init__(self, user, password):
+    def __init__(self, user=None, password=None):
         super(GmailMailer, self).__init__(user, password, "smtp.gmail.com")

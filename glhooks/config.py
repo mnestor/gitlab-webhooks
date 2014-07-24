@@ -43,8 +43,12 @@ class Configs(object):
             if self._REPO_SECTION_PATTERN.match(section):
                 if section.endswith("/"):  # remove ending slash
                     section = section[:-1]
+                if '@' not in section:
+                    section = '%s@%s' % (section, self.DEFAULT_BRANCH)
                 data[section] = section_data
-                data[section]["branch"] = section_data.get("branch", self.DEFAULT_BRANCH)
+                data[section]["branch"] = section.split('@')[1]
+                if data[section]["branch"].startswith('tags/'):
+                    data[section]["branch"] = data[section]["branch"].split('/')[1]
             else:
                 data[section] = section_data
 
@@ -74,9 +78,22 @@ class Configs(object):
 
         return logger
 
-    def find_repo(self, url):
-        repo = self._params.get(url)
+    def find_repo(self, url, ref):
+        path_info = ref.split('/')
+        path = path_info[2]
+
+        if path_info[1] == 'tags' and '-' in path_info[2]:
+            path = 'tags/%s' % path_info[2].split('-')[0]
+        pathed_section = '%s@%s' % (url, path)
+
+        if pathed_section in self._params:
+            repo = self._params.get(pathed_section)
+        else:
+            repo = self._params.get(url)
+
         if repo is not None:
             repo = dict(repo)
+
+        repo["branch"] = path_info[2]
 
         return repo

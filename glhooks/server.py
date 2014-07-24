@@ -50,7 +50,8 @@ class GitlabWebhookHandler(BaseHTTPRequestHandler):
 
     def handle_commits_data(self, commits_json):
         repo_url = commits_json["repository"]["homepage"]
-        repo_data = self.context.find_repo(repo_url)
+        repo_ref = commits_json["ref"]
+        repo_data = self.context.find_repo(repo_url, repo_ref)
         if repo_data is None:
             raise Exception("No configuration found for repository.", repo_url)
 
@@ -76,8 +77,11 @@ class GitlabWebhookHandler(BaseHTTPRequestHandler):
 
     def _gather_emails(self, commits_json):
         emails = set()
-        for commit in commits_json["commits"]:
-            emails.add(commit["author"]["email"])
+        if 'commits' in commits_json:
+            for commit in commits_json["commits"]:
+                emails.add(commit["author"]["email"])
+        else:
+            emails.add(self.context["server"]["email"])
 
         emails.add(self.context["server"]["email"])
         return list(emails)
