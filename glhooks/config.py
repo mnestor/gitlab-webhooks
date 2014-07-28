@@ -86,14 +86,10 @@ class Configs(object):
             path = 'tags/%s' % path_info[2].split('-')[0]
         pathed_section = '%s@%s' % (url, path)
 
-        if pathed_section in self._params:
-            repo = self._params.get(pathed_section)
-        else:
-            repo = self._params.get(url)
+        repo = self._params.get(pathed_section, self._params.get(url))
 
         if repo is not None:
             repo = dict(repo)
+            repo["branch"] = path_info[2]
 
-        repo["branch"] = path_info[2]
-
-        return repo
+        return (repo, path)

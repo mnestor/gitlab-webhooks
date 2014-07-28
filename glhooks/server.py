@@ -51,9 +51,11 @@ class GitlabWebhookHandler(BaseHTTPRequestHandler):
     def handle_commits_data(self, commits_json):
         repo_url = commits_json["repository"]["homepage"]
         repo_ref = commits_json["ref"]
-        repo_data = self.context.find_repo(repo_url, repo_ref)
+        repo_data, fixed_ref = self.context.find_repo(repo_url, repo_ref)
         if repo_data is None:
-            raise Exception("No configuration found for repository.", repo_url)
+            #it's not an error if we aren't configured
+            self.context.logger.info("No configuration found for repository. [%s@%s]" % (repo_url, fixed_ref))
+            return
 
         repo = Repository(repo_data["path"])
         repo.pull(branch=repo_data.get("branch"))
